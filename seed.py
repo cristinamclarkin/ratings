@@ -3,8 +3,9 @@
 from sqlalchemy import func
 from model import User
 # from model import Rating
-# from model import Movie
+from model import Movie
 
+import datetime
 from model import connect_to_db, db
 from server import app
 
@@ -37,6 +38,44 @@ def load_users():
 def load_movies():
     """Load movies from u.item into database."""
 
+    print "Movies"
+
+    Movie.query.delete()
+
+    # Read in the u.item file and insert the data
+    for row in open('seed_data/u.item.test'):
+        row = row.rstrip()
+        # 1|Toy Story (1995)|01-Jan-1995||http://us.imdb.com/M/title-exact?Toy%20Story%20(1995)|0|0|0|1|1|1|0|0|0|0|0|0|0|0|0|0|0|0|0
+        fractured_row = row.split('|')
+        movie_id = fractured_row[0]
+        title_and_year = fractured_row[1]
+        release_date_string = fractured_row[2]
+        imdb_url = fractured_row[4]
+
+        title, junk = title_and_year.split('(')
+
+        # # datetime.strptime(date_string, format)
+        # # %d %b %Y
+        release_at = datetime.strptime(release_date_string, "%d-%b-%Y")
+        # # movie_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+        # # title = db.Column(db.String(64), nullable=True)
+        # # release_at = db.Column(db.DateTime, nullable=True)
+        # # imdb_url = db.Column(db.String(64), nullable=True)
+        print movie_id
+        print title_and_year
+        print release_date_string
+        print imdb_url
+        
+        # movie = Movie(movie_id=movie_id, 
+        #               title=title, 
+        #               release_at=release_at, 
+        #               imdb_url=imdb_url)
+
+    #     db.session.add(movie)
+    #     print movie
+    #     print genre_tags
+
+    # db.session.commit()
 
 def load_ratings():
     """Load ratings from u.data into database."""
@@ -64,5 +103,5 @@ if __name__ == "__main__":
     # Import different types of data
     load_users()
     load_movies()
-    load_ratings()
+    #load_ratings()
     set_val_user_id()

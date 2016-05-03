@@ -23,6 +23,40 @@ class User(db.Model):
     age = db.Column(db.Integer, nullable=True)
     zipcode = db.Column(db.String(15), nullable=True)
 
+    def __repr__(self):
+        return "<User user_id={} email={} password={} age={} zipcode={}>".format(
+            self.user_id, self.email, self.password, self.age, self.zipcode)
+
+class Movie(db.Model):
+    """Movie in ratings website"""
+    
+    __tablename__ = "movies"
+
+
+    movie_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    title = db.Column(db.String(64), nullable=True)
+    release_at = db.Column(db.DateTime, nullable=True)
+    imdb_url = db.Column(db.String(64), nullable=True)
+
+    def __repr__(self):
+        return "<Movie movie_id={} title={} release_at={} imdb_url={}>".format(
+            self.movie_id, self.title, self.release_at, self.imdb_url)
+
+class Rating(db.Model):
+    """Ratings of various movies on website"""
+
+    __tablename__ = "ratings"
+    
+    rating_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    movie_id = db.Column(db.Integer, db.ForeignKey('movies.movie_id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
+    score = db.Column(db.Integer, nullable=True)
+
+    def __repr__(self):
+        return "<Movie rating_id={} movie_id={} user_id={} score={}>".format(
+            self.rating_id, self.movie_id, self.user_id, self.score)
+
+
 
 # Put your Movie and Rating model classes here.
 
