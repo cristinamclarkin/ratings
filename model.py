@@ -1,6 +1,7 @@
 """Models and database functions for Ratings project."""
 
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
 # This is the connection to the PostgreSQL database; we're getting this through
 # the Flask-SQLAlchemy helper library. On this, we can find the `session`
@@ -34,13 +35,13 @@ class Movie(db.Model):
 
 
     movie_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    title = db.Column(db.String(64), nullable=True)
+    title = db.Column(db.String(100), nullable=True)
     release_at = db.Column(db.DateTime, nullable=True)
-    imdb_url = db.Column(db.String(64), nullable=True)
+    imdb_url = db.Column(db.String(200), nullable=True)
 
     def __repr__(self):
         return "<Movie movie_id={} title={} release_at={} imdb_url={}>".format(
-            self.movie_id, self.title, self.release_at, self.imdb_url)
+            self.movie_id, self.title, datetime.strftime(self.release_at, "%Y-%m-%d"), self.imdb_url)
 
 class Rating(db.Model):
     """Ratings of various movies on website"""
@@ -48,9 +49,23 @@ class Rating(db.Model):
     __tablename__ = "ratings"
     
     rating_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    # movie_id = db.Column(db.Integer)
+    # user_id = db.Column(db.Integer)
     movie_id = db.Column(db.Integer, db.ForeignKey('movies.movie_id'))
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
     score = db.Column(db.Integer, nullable=True)
+
+    # Define relationship to user
+    #user = db.relationship("User",
+    #                       backref=db.backref("ratings", order_by=rating_id))
+    
+    #import pdb; set trace
+    user = db.relationship("User",
+                           backref=db.backref("Link_to_ratings", order_by=rating_id))
+
+    # Define relationship to movie
+    movie = db.relationship("Movie",
+                            backref=db.backref("ratings", order_by=rating_id))
 
     def __repr__(self):
         return "<Movie rating_id={} movie_id={} user_id={} score={}>".format(

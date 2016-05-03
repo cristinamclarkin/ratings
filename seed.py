@@ -2,10 +2,10 @@
 
 from sqlalchemy import func
 from model import User
-# from model import Rating
+from model import Rating
 from model import Movie
 
-import datetime
+from datetime import datetime 
 from model import connect_to_db, db
 from server import app
 
@@ -43,42 +43,69 @@ def load_movies():
     Movie.query.delete()
 
     # Read in the u.item file and insert the data
-    for row in open('seed_data/u.item.test'):
+    for row in open('seed_data/u.item'):
         row = row.rstrip()
         # 1|Toy Story (1995)|01-Jan-1995||http://us.imdb.com/M/title-exact?Toy%20Story%20(1995)|0|0|0|1|1|1|0|0|0|0|0|0|0|0|0|0|0|0|0
-        fractured_row = row.split('|')
-        movie_id = fractured_row[0]
-        title_and_year = fractured_row[1]
-        release_date_string = fractured_row[2]
-        imdb_url = fractured_row[4]
+        movie_id, title, released_str, junk, imdb_url = row.split("|")[:5]
 
-        title, junk = title_and_year.split('(')
+        title = title[:-7]
+   
+        # The date is in the file as daynum-month_abbreviation-year;
+        # we need to convert it to an actual datetime object.
 
-        # # datetime.strptime(date_string, format)
-        # # %d %b %Y
-        release_at = datetime.strptime(release_date_string, "%d-%b-%Y")
-        # # movie_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-        # # title = db.Column(db.String(64), nullable=True)
-        # # release_at = db.Column(db.DateTime, nullable=True)
-        # # imdb_url = db.Column(db.String(64), nullable=True)
-        print movie_id
-        print title_and_year
-        print release_date_string
-        print imdb_url
-        
-        # movie = Movie(movie_id=movie_id, 
-        #               title=title, 
-        #               release_at=release_at, 
-        #               imdb_url=imdb_url)
+        if released_str:
+            released_at = datetime.strptime(released_str, "%d-%b-%Y")
+        else:
+            released_at = None
 
-    #     db.session.add(movie)
-    #     print movie
-    #     print genre_tags
+        #release_at = datetime.strptime(released_str, "%d-%b-%Y")
 
-    # db.session.commit()
+        movie = Movie(title=title, 
+                      release_at=released_at, 
+                      imdb_url=imdb_url)
+
+        db.session.add(movie)
+
+    db.session.commit()
+
 
 def load_ratings():
     """Load ratings from u.data into database."""
+
+    print "Ratings"
+
+    for i, row in enumerate(open("seed_data/u.data")):
+        row = row.rstrip()
+
+        user_id, movie_id, score, timestamp = row.split("\t")
+
+        user_id = int(user_id)
+        movie_id = int(movie_id)
+        score = int(score)
+
+        # We don't care about the timestamp, so we'll ignore this
+
+        rating = Rating(user_id=user_id,
+                        movie_id=movie_id,
+                        score=score)
+
+        # We need to add to the session or it won't ever be stored
+        db.session.add(rating)
+
+        # provide some sense of progress
+        if i % 1000 == 0:
+            print i
+
+            # An optimization: if we commit after every add, the database
+            # will do a lot of work committing each record. However, if we
+            # wait until the end, on computers with smaller amounts of
+            # memory, it might thrash around. By committing every 1,000th
+            # add, we'll strike a good balance.
+
+            db.session.commit()
+
+    # Once we're done, we should commit our work
+    db.session.commit()
 
 
 def set_val_user_id():
@@ -103,5 +130,5 @@ if __name__ == "__main__":
     # Import different types of data
     load_users()
     load_movies()
-    #load_ratings()
+    load_ratings()
     set_val_user_id()
