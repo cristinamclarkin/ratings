@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<p>Email: {{  }}</p>
+<p>Zipcode: {{ }}</p>
+<p>Age: {{ }}</p>
+
+<table> 
+    <tr>
+        <th Movie</th>
+        <th Score</th>
+    </tr>
+    {% for item in  %}
+        <tr>
+            {{movie title}} {{movie score}}
+        </tr>
+    {% endfor %}
+</table>
+{% endblock%} 
