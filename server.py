@@ -121,6 +121,8 @@ def show_movie_details(movie_id):
 
     return render_template("movie_details.html",
                             movie=movie)
+
+
 @app.route("/movies/<int:movie_id>/show-rating-form")
 def show_rating_form(movie_id):
     """Show rating form to add or update movie rating."""
@@ -130,12 +132,13 @@ def show_rating_form(movie_id):
     
     movie = Movie.query.get(movie_id)    
 
-    if session:
-        return render_template("rating_form.html",
+    # if session:
+    return render_template("ratings.html",
                                 movie=movie)
-    else:
-        flash("Please login to add or update a movie rating.")
-        return redirect("/login")
+    # else:
+    #     flash("Please login to add or update a movie rating.")
+    #     return redirect("/login")
+
 
 @app.route('/movies/<int:movie_id>/user-rating', methods=['POST'])
 def process_ratings_form(movie_id):
@@ -159,6 +162,15 @@ def process_ratings_form(movie_id):
     flash(("Your rating of {} has been saved!").format(score))
 
     return redirect("/movies/<int:movie_id>", movie_id=movie_id)
+
+@app.route("/ratings")
+def show_ratings():
+    movie = Movie.query.get(5)  
+    print movie 
+
+    return render_template("ratings.html",
+                                movie=movie)
+
 
 
 # Utility functions
