@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<h1>Login</h1>
+<h1>New User Registration</h1>
 
 <h2>Please enter your email, password, zipcode, and age.</h2>
-<form action="/new-user-signup" method="POST">
+<form action="/process_register" method="POST">
     <label>Email: <input type="text" name="email"></label>
     <br>
     <label>Password: <input type="password" name="password"></label>

@@ -1,21 +1,14 @@
 {% extends "base.html" %}
-{% block body %}
+{% block content %}
   <h1>Login</h1>
-  {% if error %}
-    <p class=error><strong>Error:</strong> {{ error }}
-  {% endif %}
-  <form action="" method=post>
+  
+  <form action="/process_login" method="post">
     <dl>
-      <dt>Username:
-      <dd><input type=text name=username value="{{
-          request.form.username }}">
+      <dt>Email:
+      <dd><input type=text name=email>
       <dt>Password:
       <dd><input type=password name=password>
     </dl>
     <p><input type=submit value=Login>
   </form>
 {% endblock %}
-
-% extends 'base.html' %}
-{% block content %}
-

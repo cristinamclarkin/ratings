@@ -28,6 +28,7 @@ class User(db.Model):
         return "<User user_id={} email={} password={} age={} zipcode={}>".format(
             self.user_id, self.email, self.password, self.age, self.zipcode)
 
+
 class Movie(db.Model):
     """Movie in ratings website"""
     
@@ -49,8 +50,6 @@ class Rating(db.Model):
     __tablename__ = "ratings"
     
     rating_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    # movie_id = db.Column(db.Integer)
-    # user_id = db.Column(db.Integer)
     movie_id = db.Column(db.Integer, db.ForeignKey('movies.movie_id'))
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
     score = db.Column(db.Integer, nullable=True)
@@ -59,16 +58,16 @@ class Rating(db.Model):
     #user = db.relationship("User",
     #                       backref=db.backref("ratings", order_by=rating_id))
     
-    #import pdb; set trace
-    user = db.relationship("User",
-                           backref=db.backref("Link_to_ratings", order_by=rating_id))
-
     # Define relationship to movie
     movie = db.relationship("Movie",
                             backref=db.backref("ratings", order_by=rating_id))
 
+    # Define relationship to user
+    user = db.relationship("User",
+                            backref=db.backref("ratings", order_by=rating_id))
+
     def __repr__(self):
-        return "<Movie rating_id={} movie_id={} user_id={} score={}>".format(
+        return "<Rating rating_id={} movie_id={} user_id={} score={}>".format(
             self.rating_id, self.movie_id, self.user_id, self.score)
 
 

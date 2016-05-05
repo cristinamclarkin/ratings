@@ -1,18 +1,19 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<p>Email: {{  }}</p>
-<p>Zipcode: {{ }}</p>
-<p>Age: {{ }}</p>
+<p>Email: {{ user.email }}</p>
+<p>Zipcode: {{ user.zipcode }}</p>
+<p>Age: {{ user.age}}</p>
 
 <table> 
     <tr>
-        <th Movie</th>
-        <th Score</th>
+        <th> Movie</th>
+        <th> Score</th>
     </tr>
-    {% for item in  %}
+    {% for rating in user.ratings %}
         <tr>
-            {{movie title}} {{movie score}}
+            <td>{{ rating.movie.title }}</td>
+            <td>{{ rating.score }}</td>
         </tr>
     {% endfor %}
 </table>

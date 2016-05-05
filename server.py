@@ -26,55 +26,62 @@ def index():
     return render_template("homepage.html")
 
 @app.route("/users")
-def user_list():
+def show_user_list():
     """Show list of users."""
 
     users = User.query.all()
     return render_template("user_list.html", users=users)
 
 @app.route('/users/<int:user_id>')
-def user_details(user_id):
+def show_user_details(user_id):
     """Show user details."""
 
     # create instance of user based on user_id from url
     display_user = User.query.get(user_id)
 
-    return render_template('user.html', display_user=display_user)
+    return render_template('user.html', user=display_user)
 
 
 @app.route("/register")
-def register_form():
+def show_registery():
     """Routes user to registration form"""
-
 
     return render_template("registration_form.html")
 
-@app.route("/register", methods=['GET', 'POST'])
-def handle_form_data():
 
-    password = request.form['password']
-    age = request.form['age']
-    email= request.form['email']
-    zipcode = request.form['zipcode']
+@app.route("/process_register", methods=['POST'])
+def process_registry():
+    password = request.form.get('password')
+    age = int(request.form.get('age'))
+    email= request.form.get('email')
+    zipcode = request.form.get('zipcode')
 
+    user = User.query.filter_by(email=email).first()
     # Check if the user_id is taken
-    if not is_user_in_db(user_id):
+    if user:
+        print "what the fick"
+        return redirect('/login', 200)
+
+    else:
         # Create a user
+        print "made it mo'fo'"
         new_user = User(password=password, age=age, email=email, zipcode=zipcode)
         db.session.add(new_user)
+        print "uh oh bout to erro'"
         db.session.commit()
 
-    create_user_session(email, password, )
+
+    # create_user_session(email, password)
     return redirect('/', 200)
 
 
 @app.route("/login")
-def user_login():
+def show_user_login():
 
-    return render_template("login_form.html")
+    return render_template("login.html")
 
-@app.route("/login", methods=['POST'])
-def user_login():
+@app.route("/process_login", methods=['POST'])
+def process_user_login():
     email=request.form['email']
     password=request.form['password']
     # If the username exists
@@ -98,7 +105,7 @@ def log_out_user():
 
 
 @app.route("/movies")
-def movie_list():
+def show_movie_list():
     """Show list of movies."""
 
     #sorts movies by title and returns a list of all titles in db.
@@ -131,7 +138,7 @@ def show_rating_form(movie_id):
         return redirect("/login")
 
 @app.route('/movies/<int:movie_id>/user-rating', methods=['POST'])
-def display_form(movie_id):
+def process_ratings_form(movie_id):
 
     # extract form info
     score = request.form.get('score')
@@ -156,14 +163,16 @@ def display_form(movie_id):
 
 # Utility functions
 def is_user_in_db(email):
-    if User.query.filter_by(User.email == email).all():
+    print "is_user_in_db - Checking user with email {}".format(email)
+    user = User.query.filter_by(email=email).first()
+    if user:
         return True
     return False
 
 def create_user_session(email, password):
     # password check
-    user_to_check = User.query.filter_by(User.email==email, User.password==password).one()
-    if not password == user_to_check.password:
+    user_to_check = User.query.filter_by(email=email, password=password).first()
+    if not user_to_check:
         flash("Incorrect password")
         return redirect("/login")
     # Create flask session
