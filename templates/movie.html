@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+
+  <h1>Movie Details</h1>
+  <h2>{{ movie.title }}</h2>
+    <ul>
+        <li><b>Release Date</b>: {{ movie.released_at }}</li><br>
+        <li><b>IMDB URL</b>: {{ movie.imdb_url }}</li><br>
+        <li>
+                <form action="/movies/{{ movie.movie_id }}/show-rating-form">
+                    <input type="submit" value="Add/Update Rating">
+                </form>
+        </li><br>
+        <li><b>List of Ratings</b>:
+          <ul>
+           <!-- list of ratings the movie has received -->
+            {% if movie.ratings %}
+              {% for rating in movie.ratings %}
+                <li>User {{ rating.user.user_id }} - <b>{{ rating.score }}</b></li> 
+              {% endfor %}
+            {% else %}
+              <p>No ratings for this movie.<p>
+            {% endif %}
+          </ul>
+        </li>
+    </ul>
+
+
+
+{% endblock %}
