@@ -9,6 +9,7 @@ from flask_debugtoolbar import DebugToolbarExtension
 from model import User, Rating, Movie, connect_to_db, db
 
 
+
 app = Flask(__name__)
 
 # Required to use Flask sessions and the debug toolbar
@@ -59,19 +60,15 @@ def process_registry():
     user = User.query.filter_by(email=email).first()
     # Check if the user_id is taken
     if user:
-        print "what the fick"
         return redirect('/login', 200)
 
     else:
         # Create a user
-        print "made it mo'fo'"
         new_user = User(password=password, age=age, email=email, zipcode=zipcode)
         db.session.add(new_user)
-        print "uh oh bout to erro'"
         db.session.commit()
 
-
-    # create_user_session(email, password)
+    create_user_session(email, password)
     return redirect('/', 200)
 
 
@@ -130,14 +127,106 @@ def show_rating_form(movie_id):
     # If user is logged in, render rating_form.html.
     # Otherwise, redirect to login page.
     
-    movie = Movie.query.get(movie_id)    
+    movie = Movie.query.get(movie_id)
 
-    # if session:
-    return render_template("ratings.html",
-                                movie=movie)
-    # else:
-    #     flash("Please login to add or update a movie rating.")
-    #     return redirect("/login")
+
+    user_id = session.get("user_id")
+
+    if user_id:
+        user_rating = Rating.query.filter_by(
+            movie_id=movie_id, user_id=user_id).first()
+
+    else:
+        user_rating = None
+
+    rating_scores = [r.score for r in movie.ratings]
+    average = float(sum(rating_scores)) / len(rating_scores)
+
+    prediction = None
+
+    # Prediction code: only predict if the user hasn't rated it.
+
+    if (not user_rating) and user_id:
+        user = User.query.get(user_id)
+        if user:
+            prediction = user.predict_rating(movie)
+
+    # Either use the prediction or their real rating
+
+    if prediction:
+        # User hasn't scored; use our prediction if we made one
+        effective_rating = prediction
+
+    elif user_rating:
+        # User has already scored for real; use that
+        effective_rating = user_rating.score
+
+    else:
+        # User hasn't scored, and we couldn't get a prediction
+        effective_rating = None
+
+    # Get the eye's rating, either by predicting or using real rating
+
+    the_eye = User.query.filter_by(email="the-eye@of-judgment.com").one()
+    eye_rating = Rating.query.filter_by(
+        user_id=the_eye.user_id, movie_id=movie.movie_id).first()
+
+    if eye_rating is None:
+        eye_rating = the_eye.predict_rating(movie)
+
+    else:
+        eye_rating = eye_rating.score
+
+    if eye_rating and effective_rating:
+        difference = abs(eye_rating - effective_rating)
+
+    else:
+        # We couldn't get an eye rating, so we'll skip difference
+        difference = None
+
+    # Depending on how different we are from the Eye, choose a message
+
+    BERATEMENT_MESSAGES = [
+        "I suppose you don't have such bad taste after all.",
+        "I regret every decision that I've ever made that has brought me" +
+            " to listen to your opinion.",
+        "Words fail me, as your taste in movies has clearly failed you.",
+        "That movie is great. For a clown to watch. Idiot.",
+        "Words cannot express the awfulness of your taste."
+    ]
+
+    if difference is not None:
+        beratement = BERATEMENT_MESSAGES[int(difference)]
+        print "Beratement is {}".format(beratement)
+    else:
+        beratement = None
+
+  
+    # {% if beratement %}
+    #   <p>Balloonicorn's mom says "{{ beratement }}".</p>
+    # {% endif %}
+
+
+    # return render_template(
+    #     "ratings.html",
+    #     movie=movie,
+    #     user_rating=user_rating,
+    #     average=average,
+    #     prediction=prediction,
+    #     beratement = beratement
+    #     )
+
+    return render_template(
+        "ratings.html",
+        movie=movie,
+        user_rating=user_rating,
+        average=average,
+        prediction=prediction
+        )
+
+
+#    return render_template("ratings.html",
+#                                movie=movie, average=average, prediction=prediction)
 
 
 @app.route('/movies/<int:movie_id>/user-rating', methods=['POST'])
@@ -146,27 +235,33 @@ def process_ratings_form(movie_id):
     # extract form info
     score = request.form.get('score')
 
-    # rating = db.session.query(Rating).filter(Rating.user_id == session['user'], Rating.movie_id == movie_id).first()
     rating = Rating.query.filter(Rating.user_id == session['user_id'], Rating.movie_id == movie_id).first()
-    
+
+    #movie = Movie.query.filter(Movie.movie_id == movie_id).first()
+
     # if user has already submitted a score for this movie, then update DB
     if rating:
+        #old_score = rating.score
         rating.score = score
+
+        #print "In process_ratings_form - Updating score for {} from {} to {}".format(movie.title, old_score, rating.score)
     # else, add new rating to DB
     else:
         rating = Rating(user_id=session['user_id'], movie_id=movie_id, score=score)
         db.session.add(rating)
+
+        #print "in process_ratings_form - Adding score for {} as {}".format(movie.title, rating.score)
         
     db.session.commit()
 
     flash(("Your rating of {} has been saved!").format(score))
 
-    return redirect("/movies/<int:movie_id>", movie_id=movie_id)
+    return redirect("/movies/" + str(movie_id), 200)
 
 @app.route("/ratings")
 def show_ratings():
     movie = Movie.query.get(5)  
-    print movie 
+    #print movie 
 
     return render_template("ratings.html",
                                 movie=movie)

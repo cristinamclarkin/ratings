@@ -3,6 +3,9 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
+import correlation
+
+
 # This is the connection to the PostgreSQL database; we're getting this through
 # the Flask-SQLAlchemy helper library. On this, we can find the `session`
 # object, where we do most of our interactions (like committing, etc.)
@@ -24,9 +27,58 @@ class User(db.Model):
     age = db.Column(db.Integer, nullable=True)
     zipcode = db.Column(db.String(15), nullable=True)
 
+    def similarity(self, other):
+        """Return Pearson rating for user compared to other user.
+        Takes self and second user"""
+
+        user_ratings = {}
+        paired_ratings = []
+
+        for rating in self.ratings:
+            # Create our keys of movie_ids for movies we've seen
+            user_ratings[rating.movie_id] = rating
+
+        for other_rating in other.ratings:
+            # Get the rating for a movie we've rated that's in the other 
+            # user's movie ratings
+            user_rating = user_ratings.get(other_rating.movie_id)
+            # If there's actually a rating
+            if user_rating:
+                # Add it to the list of pairs
+                paired_ratings.append( (user_rating.score, other_rating.score) )
+
+        # If we have any pairs to get similarity with, get the correlation
+        if paired_ratings:
+            return correlation.pearson(paired_ratings)
+        # Else, return no correlation
+        else:
+            return 0.0
+
+    def predict_rating(self, movie):
+        """Predict user's rating of a movie.
+        Takes a movie object """
+
+        other_ratings = movie.ratings
+
+        similarities = [ (self.similarity(other_rating.user), other_rating) for other_rating in other_ratings]
+
+        similarities.sort(reverse=True)
+
+        similarities = [(sim, other_rating) for sim, other_rating in similarities if sim > 0]
+
+        if not similarities:
+            return None
+
+        numerator = sum([other_rating.score * sim for sim, other_rating in similarities])
+        denominator = sum([sim for sim, other_rating in similarities])
+
+        return numerator/denominator
+
+
     def __repr__(self):
         return "<User user_id={} email={} password={} age={} zipcode={}>".format(
             self.user_id, self.email, self.password, self.age, self.zipcode)
+
 
 
 class Movie(db.Model):
@@ -45,7 +97,7 @@ class Movie(db.Model):
             self.movie_id, self.title, datetime.strftime(self.release_at, "%Y-%m-%d"), self.imdb_url)
 
 class Rating(db.Model):
-    """Ratings of various movies on website"""
+    """Ratings of various movies on websiteM"""
 
     __tablename__ = "ratings"
     
